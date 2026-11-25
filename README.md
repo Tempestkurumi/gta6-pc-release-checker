@@ -7,6 +7,7 @@ A tiny page that tells you whether GTA 6 has a PC release date.
 - `.github/workflows/check.yml` runs it every day on GitHub for free and saves `result.json`.
 - `index.html` shows the answer in a square. Add it to your phone's home screen to use it like an app.
 # Page
--https://tempestkurumi.github.io/gta6-pc-release-checker/
+- https://tempestkurumi.github.io/gta6-pc-release-checker/
 # Installation on phone
-- On iPhone use Safari → Share → Add to Home Screen. On Android use Chrome menu → Add to Home screen.
+- Open the page in either Chrome or Safari.
+- On iPhone use Safari → Share → Add to Home Screen. On Android, use the Chrome menu → Add to Home Screen.
