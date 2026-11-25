@@ -1,0 +1,16 @@
+[
+  {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/fxbc7ETMDds:APA91bE4Lmqle03fgIgtVEsgbaNvbek16ukRwp8QbPvfkG_XulunL_t_qvMu-KwHE5Eiewq-rBP0XgaW-Oo_kA2haWQfZ8LVycrCk-MgW7unYMF-OyhAewBEI76wSypcmfCWeinLsVKC",
+    "keys": {
+      "p256dh": "BM_fSVVxwXM0Enn8uD7KpAHJJ19K4YulhPOcoGW6lyF9sMiSapwJjM7R3cdxlDTi3KE--VptcxagFTGA38eZvnI",
+      "auth": "VYPBiOscBIHdncMt2x43xw"
+    },
+    "prefs": {
+      "official": true,
+      "released": true,
+      "rumor": false
+    },
+    "label": "Windows · Chrome",
+    "added": "2026-11-25T10:45:07+00:00"
+  }
+]
