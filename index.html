@@ -117,7 +117,7 @@
     switch (r.status) {
       case "released":      return "released";
       case "date_official": return "date";
-      case "pc_confirmed":  return "confirmed";
+      case "pc_confirmed":  return r.confidence === "rumored" ? "rumored" : "confirmed";
       case "date_rumored":
       case "pc_rumored":    return "rumored";
       default:              return "none";

@@ -103,14 +103,16 @@ CONFIRM_RE = re.compile(r"(?i)(coming to|come to|comes to|heading to|headed to|a
 NEG_RE = re.compile(r"(?i)(no plans|not coming|isn't coming|is not coming|won't|will not|"
                     r"not (?:yet )?(?:been )?(?:announced|confirmed|revealed|available)|"
                     r"hasn't|has not|haven't|have not|yet to|unavailable|exclusive|"
-                    r"only on (?:PS5|PlayStation|consoles?)|no PC|without (?:a )?PC|"
+                    r"only on (?:PS5|PlayStation|consoles?)|\bno\b[^.?!]{0,30}\bPC\b|"
+                    r"without (?:a )?PC|"
                     r"skip(?:s|ping)? PC|never|no word|no news|no info|no sign|"
                     r"no mention|nothing about|nothing on|no official|doesn't|does not)")
 
 # Questions, wishes, "if" talk: not facts
 HYPO_RE = re.compile(r"(?i)(\?|^(?:will|when|is|are|does|do|can|could|should|why|how)\b|"
                      r"\b(?:hope|hoping|wish|petition|wishlist|speculat\w*|imagine|if|"
-                     r"whether|what if|ever|demand\w*|begging|asking|wants?)\b)")
+                     r"whether|what if|ever|demand\w*|begging|asking|wants?|wonder\w*|"
+                     r"waiting|awaiting|curious|when will|when is|when does|when can)\b)")
 
 # Rumor words: the sentence may still count, but only as "rumored"
 RUMOR_RE = re.compile(r"(?i)(rumou?r\w*|leak\w*|insider|reportedly|allegedly|supposedly|"
