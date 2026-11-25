@@ -536,7 +536,8 @@ def decide(findings):
         return res
 
     c_clean, c_total = aggregate(confirms)
-    pc_confirmed = c_clean >= OFFICIAL_SCORE
+    # "Confirmed" needs Rockstar / Take-Two / Steam themselves. News sites alone = rumor.
+    pc_confirmed = any(f["weight"] >= W_OFFICIAL and not f["rumor"] for f in confirms)
     pc_rumored = c_total >= MIN_SCORE
 
     groups = {}
@@ -558,7 +559,7 @@ def decide(findings):
         d = fs[0]["date"]
         res.update(date=d["start"].isoformat() if d["kind"] == "exact" else None,
                    date_text=d["text"], date_kind=d["kind"],
-                   sources=evidence(fs))
+                   sources=evidence(fs + (confirms if pc_confirmed else [])))
         if official:
             res.update(status="date_official", confidence="official",
                        headline=f"PC release: {d['text']}",
