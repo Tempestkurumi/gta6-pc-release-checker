@@ -14,29 +14,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The saved answer and the device list live on the "data" branch, so saving them
+      # never redeploys the website. (Create the branch once, see README.)
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+
       - name: Run the checker
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # optional, not needed for website notifications
-        run: python3 check.py
+        run: |
+          # first run only: carry over files that used to live on the main branch
+          for f in result.json subscriptions.json; do
+            if [ ! -f "data/$f" ] && [ -f "$f" ]; then cp "$f" "data/$f"; fi
+          done
+          python3 check.py --out data/result.json
 
       # Only when the answer changed: check.py leaves a notify.json behind
       - uses: actions/setup-python@v5
-        if: hashFiles('notify.json') != ''
+        if: hashFiles('data/notify.json') != ''
         with:
           python-version: "3.12"
 
       - name: Install the web push library
-        if: hashFiles('notify.json') != ''
+        if: hashFiles('data/notify.json') != ''
         run: pip install --disable-pip-version-check pywebpush
 
       - name: Send push notifications
-        if: hashFiles('notify.json') != ''
+        if: hashFiles('data/notify.json') != ''
         env:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           REPO: ${{ github.repository }}
+          SUBS_FILE: data/subscriptions.json
+          NOTIFY_FILE: data/notify.json
         run: python3 push.py notify
 
       - name: Save result
+        working-directory: data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
