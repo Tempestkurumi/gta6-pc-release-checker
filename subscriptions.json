@@ -14,20 +14,6 @@
     "added": "2026-11-25T11:51:01+00:00"
   },
   {
-    "endpoint": "https://fcm.googleapis.com/fcm/send/cVEvzNIi8dg:APA91bE7cIMAR53KsI-HQ5ojQaA-BkaEKbkS51AVTya3qxdvn_H5ltoY8Z9oD8gX6iCttGnFQP_-nOWNXh6MNZjWXM8j2sxT3esXodokVfYhQanQ_WU0cXY0a_mTDRW2ABzq3-w91MFA",
-    "keys": {
-      "p256dh": "BKDmZlyZqseBT0si_cmKUwQF-d8jGA7O2d-Z1Ay-_7eBDGSSvi2UzC5vjI1Y-ksajPexZQYaUZs9OnR2HfxM_bs",
-      "auth": "QLSlMVget5_kBljpXogkCQ"
-    },
-    "prefs": {
-      "official": true,
-      "released": true,
-      "rumor": false
-    },
-    "label": "Android · Chrome (app)",
-    "added": "2026-11-25T14:23:57+00:00"
-  },
-  {
     "endpoint": "https://fcm.googleapis.com/fcm/send/csOmsoYchVA:APA91bEeT7yOeb_2jabKIbK46sG5Dx6WdIDUPhooJbYXTAOrPHj9NU1_jI2dwOqB-io9zwoou-ThMls5iF0FJv6xdszTLgkNh45frWF27OqqcfSiNX3tJ_Baq2Ob17KZZQYtT2J5MQFx",
     "keys": {
       "p256dh": "BNmwS6jcRxtzcfzIJwv15-pxYK-S1czF2q24oPkKiDHVuv3cn1Sa9RuGMcwO8uovswUPnWc-ZQoeKb76vw9W4-g",
