@@ -11,3 +11,7 @@ A tiny page that tells you whether GTA 6 has a PC release date.
 # Installation on phone
 - Open the page in either Chrome or Safari.
 - On iPhone use Safari → Share → Add to Home Screen. On Android, use the Chrome menu → Add to Home Screen.
+
+# AI disclosure
+AI was used to write this code in its entirety.
+As this is not meant to be downloaded and only to host a webpage, it should be fine from a security standpoint.
