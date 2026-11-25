@@ -1,32 +1,32 @@
 {
-  "status": "pc_confirmed",
-  "headline": "PC confirmed, date not official",
-  "detail": "PC is confirmed, but the date (March 2027) is only rumored.",
+  "status": "date_rumored",
+  "headline": "PC release: March 2027 (rumored)",
+  "detail": "Rumored only. Not confirmed by Rockstar or several trusted sites.",
   "date": null,
   "date_text": "March 2027",
   "date_kind": "month",
   "confidence": "rumored",
   "sources": [
     {
-      "title": "GTA 6 will be released on PC in March 2027, along with the launch of GTA 6 Online.",
-      "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxQblROeWhYQmZhX0tZZEtRUFk0VEx1WlA1WXVpUU1YdDVrY3RjZndubTkzemp6TEpXMXRqNnJyRE9jOUdsbmhRNXhOOEVUVy1PNndjTmpnVzlFU0prSl85aVhzUEJNeDJuRmd6T1AyZnZNWjdUVkswQnB6MTFxZ1ptVkxUaUo4UWJMTUJiNUkwVEF2bXBVbUQwenZVbEJ5RGFzQ0E?oc=5",
-      "source": "en.gamegpu.com",
-      "published": "2026-11-25",
-      "rumor": false
-    },
-    {
       "title": "Report: GTA VI PC port coming Jan - Mar 2027",
       "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPdG4wMlpmcFpKYk0zSGd3R1RaRC02WExsQmQ5TlQ3dnNuTkxiTzVWWm43WWMwR2stYlZGNXdQUmJVTUFjcXNSSmZLUV9ZMXZHMmI2RkUzbzlJV3FIMmpfUmUyekFwam5QMDY3SWZuQTNSclBiY2dGRlRoQklOaUoyQzN0MXcySjhvVk51ODVrNW1DdHpv?oc=5",
       "source": "tweaktown.com",
       "published": "2026-10-13",
       "rumor": false
+    },
+    {
+      "title": "Unauthorized 'GTA 6' PC port shut down by Rockstar Games' parent company",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE12VTc3ZHQtR2xucW9IU0RZNmRsYVVMWUViamJ5Xzh4R3FJc1ZHc1V1STRLeDk1aEJfQ25TbTk1bTk5OVRpU21xSF9hNjNjQTdJNEd5d1pYXy1NU2s5TlhWLTEyOENSa0hPRHBMcVpZOWViY3dRejhjSQ?oc=5",
+      "source": "mashable.com",
+      "published": "2026-11-24",
+      "rumor": true
     }
   ],
-  "checked_at": "2026-11-25T07:39:32+00:00",
-  "changed_at": "2026-11-25T07:39:32+00:00",
+  "checked_at": "2026-11-25T08:32:56+00:00",
+  "changed_at": "2026-11-25T08:32:56+00:00",
   "steam": "no page",
-  "articles_scanned": 1254,
-  "articles_about_gta6": 548,
+  "articles_scanned": 1255,
+  "articles_about_gta6": 566,
   "feeds_ok": 15,
   "feeds_total": 15
 }
