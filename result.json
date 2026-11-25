@@ -1,0 +1,12 @@
+{
+  "status": "unchecked",
+  "headline": "Not checked yet",
+  "detail": "Run the workflow once (Actions tab, Run workflow) to get the first result.",
+  "date": null,
+  "date_text": null,
+  "date_kind": null,
+  "confidence": null,
+  "sources": [],
+  "checked_at": null,
+  "changed_at": null
+}

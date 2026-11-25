@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GTA 6 PC Release Checker</title>
+<meta name="description" content="Checks daily whether GTA 6 has a PC release date.">
+<meta name="theme-color" content="#0f1a14">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GTA 6 PC">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root {
+    --bg: #f3f5f4; --fg: #14201a; --muted: #5d6b63; --line: #d5dcd8;
+    --card: #ffffff; --accent: #5b6b63; --accent-bg: #eef1ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1a14; --fg: #e8f1ec; --muted: #93a39a; --line: #263a2f;
+      --card: #15241c; --accent: #93a39a; --accent-bg: #1b2d23;
+    }
+  }
+  /* colour of the square depends on the answer */
+  body[data-state="none"]      { --accent: #6b7a72; }
+  body[data-state="rumored"]   { --accent: #d98c00; }
+  body[data-state="confirmed"] { --accent: #1f9d55; }
+  body[data-state="date"]      { --accent: #1f9d55; }
+  body[data-state="released"]  { --accent: #1f9d55; }
+  body[data-state="error"]     { --accent: #d64545; }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+    gap: 20px;
+  }
+  .square {
+    width: min(86vw, 420px); aspect-ratio: 1 / 1;
+    background: var(--card); border: 3px solid var(--accent); border-radius: 22px;
+    padding: 22px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  }
+  .label { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .headline { font-size: clamp(24px, 7.4vw, 34px); font-weight: 750; line-height: 1.15; margin: 0; }
+  .count { font-size: 18px; font-weight: 600; color: var(--accent); }
+  .badge {
+    font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; background: var(--accent-bg); color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .detail { font-size: 14px; color: var(--muted); margin: 0; max-width: 30ch; }
+  .meta { font-size: 13px; color: var(--muted); text-align: center; }
+  .warn { color: #d98c00; font-weight: 600; }
+  details { width: min(86vw, 420px); font-size: 14px; }
+  summary { cursor: pointer; color: var(--muted); text-align: center; padding: 6px; }
+  ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+  li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  li a { color: var(--fg); text-decoration: none; font-weight: 600; word-break: break-word; }
+  li small { display: block; color: var(--muted); margin-top: 2px; }
+  button {
+    font: inherit; font-size: 14px; color: var(--muted); background: none;
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  }
+</style>
+</head>
+<body data-state="none">
+
+<main class="square" aria-live="polite">
+  <div class="label">GTA 6 &middot; PC release</div>
+  <h1 class="headline" id="headline">Checking&hellip;</h1>
+  <div class="count" id="count" hidden></div>
+  <span class="badge" id="badge" hidden></span>
+  <p class="detail" id="detail"></p>
+</main>
+
+<div class="meta" id="meta"></div>
+
+<details id="sources" hidden>
+  <summary>Where this comes from</summary>
+  <ul id="sourceList"></ul>
+</details>
+
+<button id="reload" type="button">Check again</button>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  function ago(iso) {
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 3600)  return Math.max(1, Math.round(s / 60)) + " min ago";
+    if (s < 86400) return Math.round(s / 3600) + " h ago";
+    var d = Math.round(s / 86400);
+    return d + (d === 1 ? " day ago" : " days ago");
+  }
+
+  function daysUntil(isoDate) {
+    var p = isoDate.split("-").map(Number);
+    var target = new Date(p[0], p[1] - 1, p[2]);
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((target - now) / 86400000);
+  }
+
+  function stateOf(r) {
+    switch (r.status) {
+      case "released":      return "released";
+      case "date_official": return "date";
+      case "pc_confirmed":  return "confirmed";
+      case "date_rumored":
+      case "pc_rumored":    return "rumored";
+      default:              return "none";
+    }
+  }
+
+  function render(r) {
+    document.body.dataset.state = stateOf(r);
+    $("headline").textContent = r.headline || "No PC announcement yet";
+    $("detail").textContent = r.detail || "";
+
+    var count = $("count");
+    count.hidden = true;
+    if (r.date && r.date_kind === "exact") {
+      var n = daysUntil(r.date);
+      count.textContent = n > 1 ? "in " + n + " days" : n === 1 ? "tomorrow" : n === 0 ? "today" : "";
+      count.hidden = !count.textContent;
+    }
+
+    var badge = $("badge");
+    badge.hidden = !r.confidence;
+    badge.textContent = r.confidence === "official" ? "Official" : "Rumor";
+
+    var meta = [];
+    if (r.checked_at) {
+      var old = (Date.now() - new Date(r.checked_at).getTime()) > 10 * 86400000;
+      meta.push('<span class="' + (old ? "warn" : "") + '">Last checked ' + ago(r.checked_at) +
+                (old ? " (the daily check may have stopped)" : "") + "</span>");
+    }
+    if (r.changed_at && r.status !== "none" && r.status !== "unchecked") {
+      meta.push("Changed " + ago(r.changed_at));
+    }
+    if (r.feeds_total) {
+      meta.push(r.feeds_ok + "/" + r.feeds_total + " news feeds reachable");
+    }
+    $("meta").innerHTML = meta.join("<br>");
+
+    var list = $("sourceList");
+    list.textContent = "";
+    var src = r.sources || [];
+    $("sources").hidden = src.length === 0;
+    src.forEach(function (s) {
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.textContent = s.title || s.url;
+      if (/^https?:\/\//.test(s.url || "")) { a.href = s.url; a.target = "_blank"; a.rel = "noopener"; }
+      var small = document.createElement("small");
+      small.textContent = (s.source || "") + (s.published ? " · " + s.published : "") +
+                          (s.rumor ? " · rumor wording" : "");
+      li.appendChild(a); li.appendChild(small); list.appendChild(li);
+    });
+  }
+
+  function fail(msg) {
+    document.body.dataset.state = "error";
+    $("headline").textContent = "Couldn’t load the result";
+    $("detail").textContent = msg;
+    $("count").hidden = true; $("badge").hidden = true;
+  }
+
+  function load() {
+    $("headline").textContent = "Checking…";
+    fetch("result.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+      .then(render)
+      .catch(function (e) {
+        fail("Open this page from its web link (not as a local file). " + e.message);
+      });
+  }
+
+  $("reload").addEventListener("click", load);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+  load();
+})();
+</script>
+</body>
+</html>
