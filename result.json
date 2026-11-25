@@ -8,9 +8,9 @@
   "confidence": "rumored",
   "sources": [
     {
-      "title": "GTA 6 will be released on PC in March 2027, along with the launch of GTA 6 Online.",
-      "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxQblROeWhYQmZhX0tZZEtRUFk0VEx1WlA1WXVpUU1YdDVrY3RjZndubTkzemp6TEpXMXRqNnJyRE9jOUdsbmhRNXhOOEVUVy1PNndjTmpnVzlFU0prSl85aVhzUEJNeDJuRmd6T1AyZnZNWjdUVkswQnB6MTFxZ1ptVkxUaUo4UWJMTUJiNUkwVEF2bXBVbUQwenZVbEJ5RGFzQ0E?oc=5",
-      "source": "en.gamegpu.com",
+      "title": "Unauthorized 'GTA 6' PC port shut down by Rockstar Games' parent company",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE12VTc3ZHQtR2xucW9IU0RZNmRsYVVMWUViamJ5Xzh4R3FJc1ZHc1V1STRLeDk1aEJfQ25TbTk1bTk5OVRpU21xSF9hNjNjQTdJNEd5d1pYXy1NU2s5TlhWLTEyOENSa0hPRHBMcVpZOWViY3dRejhjSQ?oc=5",
+      "source": "mashable.com",
       "published": "2026-11-25",
       "rumor": false
     },
@@ -22,11 +22,11 @@
       "rumor": false
     }
   ],
-  "checked_at": "2026-11-25T11:53:10+00:00",
+  "checked_at": "2026-11-25T11:54:20+00:00",
   "changed_at": "2026-11-25T11:53:10+00:00",
   "steam": "no page",
-  "articles_scanned": 1290,
-  "articles_about_gta6": 577,
+  "articles_scanned": 1256,
+  "articles_about_gta6": 565,
   "feeds_ok": 15,
   "feeds_total": 15
 }
