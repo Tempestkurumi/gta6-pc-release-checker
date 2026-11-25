@@ -55,14 +55,28 @@ function cleanPrefs(p) {
   return { official: p.official !== false, released: p.released !== false, rumor: p.rumor === true };
 }
 
-async function overLimit(env, request, action) {
-  if (!env.RATE) return false;                       // no KV bound: no limit
-  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const key = `rl:${action}:${ip}:${Math.floor(Date.now() / 3600000)}`;
+// total across ALL visitors, per hour. Stops spam that rotates IP addresses.
+// Raise these numbers if real users ever start hitting "slow down".
+const GLOBAL_LIMITS = { subscribe: 60, unsubscribe: 60, test: 30 };
+
+async function bump(env, key, limit) {
   const n = parseInt((await env.RATE.get(key)) || "0", 10);
-  if (n >= LIMITS[action]) return true;
+  if (n >= limit) return true;                       // over the limit: no write at all
   await env.RATE.put(key, String(n + 1), { expirationTtl: 7200 });
   return false;
+}
+
+async function overLimit(env, request, action) {
+  if (!env.RATE) return false;                       // no KV bound: no limit
+  try {
+    const hour = Math.floor(Date.now() / 3600000);
+    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    if (await bump(env, `rl:${action}:${ip}:${hour}`, LIMITS[action])) return true;
+    if (await bump(env, `rl:all:${action}:${hour}`, GLOBAL_LIMITS[action])) return true;
+    return false;
+  } catch {
+    return true;                                     // KV broken or out of quota: refuse (protects GitHub)
+  }
 }
 
 async function dispatchPush(env, inputs) {
