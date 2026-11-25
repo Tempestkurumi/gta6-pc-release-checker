@@ -26,7 +26,11 @@
   }
   /* colour of the square depends on the answer */
   body[data-state="none"]      { --accent: #6b7a72; }
-  body[data-state="rumored"]   { --accent: #d98c00; }
+  /* rumor: everything yellow (page, outline, text) */
+  body[data-state="rumored"] {
+    --bg: #1c1700; --card: #261f00; --fg: #ffd21f; --muted: #e6bd1c;
+    --line: #5c4c00; --accent: #ffd21f; --accent-bg: #332a00;
+  }
   body[data-state="confirmed"] { --accent: #1f9d55; }
   body[data-state="date"]      { --accent: #1f9d55; }
   body[data-state="released"]  { --accent: #1f9d55; }
