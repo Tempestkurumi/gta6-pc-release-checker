@@ -252,6 +252,7 @@
         </label>
       </div>
       <p id="nCount"></p>
+      <p id="nLimit">Heads up: this checker currently supports up to 500 devices, and I&rsquo;m working on raising that. Questions or problems? <a id="nContact" href="#" target="_blank" rel="noopener">Contact me on GitHub</a>.</p>
     </div>
 
     <div class="card">
@@ -461,6 +462,11 @@
   var slug = host && repoName ? host[1] + "/" + repoName : "";
   var memKey = "";      // key unlocked from lock.json (kept in memory only, never saved)
   var lockCache;        // undefined = not looked for yet, null = no lock.json, object = lock.json
+  (function () {      // "Contact me" link points to this site's own GitHub repo
+    var a = $("nContact");
+    if (!a) return;
+    if (slug) a.href = "https://github.com/" + slug; else a.hidden = true;
+  })();
 
   function getKey() {
     if (memKey) return memKey;
@@ -718,20 +724,49 @@
     updateSave();
   }
 
-  async function registerOnServer(sub) {
-    if (!(await ensureKey())) return false;
-    var t0 = Date.now();
-    say("Registering this device…", true);
-    var ok = await dispatchWorkflow("push.yml", {
-      action: "subscribe", subscription: JSON.stringify(sub.toJSON()),
-      prefs: JSON.stringify(readPrefs()), label: deviceLabel()
-    });
-    if (!ok) return false;
-    var run = await waitForRun("push.yml", t0);
-    if (!run) { say("Still working on it. Come back to this page in a minute."); return false; }
-    if (run.conclusion !== "success") {
-      say("Registering failed. Open the Actions tab on GitHub (“Push notifications”) to see why."); return false;
+  /* Public notification gateway (a free Cloudflare Worker, see worker.js).
+     It holds the GitHub key, so visitors never need a password for notifications.
+     Paste your Worker address here, e.g. "https://gta6-push.yourname.workers.dev" */
+  var PUSH_API = "https://REPLACE-ME.workers.dev";
+
+  async function pushApi(action, payload) {
+    if (!PUSH_API || PUSH_API.indexOf("REPLACE-ME") !== -1) {
+      say("Notifications aren’t connected yet: the site owner needs to set PUSH_API in index.html."); return false;
     }
+    try {
+      var r = await fetch(PUSH_API + "/" + action, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      });
+      if (r.status === 429) { say("Too many requests from this device. Try again in a bit."); return false; }
+      if (!r.ok) { say("The notification service said no (error " + r.status + ")."); return false; }
+      return true;
+    } catch (e) { say("Couldn’t reach the notification service: " + e.message); return false; }
+  }
+
+  function samePrefs(a, b) {
+    a = a || DEFAULT_PREFS; b = b || DEFAULT_PREFS;
+    return !!a.official === !!b.official && !!a.released === !!b.released && !!a.rumor === !!b.rumor;
+  }
+
+  // Waits (up to ~3.5 min) until the public device list shows what we asked for.
+  async function waitForDevice(endpoint, test) {
+    for (var i = 0; i < 42; i++) {
+      await sleep(5000);
+      var subs = await readSubs();
+      var e = subs.filter(function (x) { return x.endpoint === endpoint; })[0];
+      if (test(e)) return true;
+    }
+    return false;
+  }
+
+  async function registerOnServer(sub) {
+    var prefs = readPrefs();
+    say("Registering this device…", true);
+    var ok = await pushApi("subscribe", { subscription: sub.toJSON(), prefs: prefs, label: deviceLabel() });
+    if (!ok) return false;
+    say("Sent. This takes about a minute…", true);
+    var done = await waitForDevice(sub.endpoint, function (e) { return !!e && samePrefs(e.prefs, prefs); });
+    if (!done) { say("Still working on it. Come back to this page in a minute."); return false; }
     say("Saved ✓ This device is registered.");
     return true;
   }
@@ -765,12 +800,8 @@
     var endpoint = sub.endpoint;
     await sub.unsubscribe();
     say("Turned off on this device.");
-    if (!(await ensureKey())) { say("Turned off here. It will disappear from the list the next time GitHub can’t reach it."); return; }
-    var t0 = Date.now();
-    if (await dispatchWorkflow("push.yml", { action: "unsubscribe", endpoint: endpoint })) {
-      await waitForRun("push.yml", t0);
-      say("Turned off ✓");
-    }
+    if (await pushApi("unsubscribe", { endpoint: endpoint })) say("Turned off ✓ It will leave the device list in about a minute.");
+    else say("Turned off here. It will disappear from the list the next time it can’t be reached.");
   }
 
   $("nSwitch").addEventListener("change", async function () {
@@ -798,17 +829,11 @@
     var reg = await navigator.serviceWorker.getRegistration();
     var sub = reg ? await reg.pushManager.getSubscription() : null;
     if (!sub) { say("Turn notifications on first."); return; }
-    if (!(await ensureKey())) return;
     btn.disabled = true;
     try {
-      var t0 = Date.now();
-      if (!(await dispatchWorkflow("push.yml", { action: "test", endpoint: sub.endpoint, delay: "15" }))) return;
-      say("Test started. Close the app or browser now. A notification should arrive in about a minute.", true);
-      var run = await waitForRun("push.yml", t0);
-      if (!run) say("Still no answer from GitHub. If no notification arrives, tell me.");
-      else if (run.conclusion !== "success") say("The test failed. Open the Actions tab on GitHub (“Push notifications”) to see why.");
-      else say("The test was sent ✓ If nothing showed up, tell me.");
-    } finally { btn.disabled = false; }
+      if (!(await pushApi("test", { endpoint: sub.endpoint }))) return;
+      say("Test started. Close the app or browser now. A notification should arrive in about a minute. If nothing shows up, tell the site owner.");
+    } finally { setTimeout(function () { btn.disabled = false; }, 15000); }
   });
 
   $("nLocal").addEventListener("click", async function () {

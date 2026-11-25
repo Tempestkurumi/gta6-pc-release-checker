@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 SUBS_FILE = os.environ.get("SUBS_FILE", "subscriptions.json")
 VAPID_FILE = os.environ.get("VAPID_FILE", "vapid.json")
 NOTIFY_FILE = os.environ.get("NOTIFY_FILE", "notify.json")
-MAX_DEVICES = 20
+MAX_DEVICES = 500
 DEFAULT_PREFS = {"official": True, "released": True, "rumor": False}
 
 
