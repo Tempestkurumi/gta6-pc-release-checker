@@ -256,7 +256,39 @@
   }
 
   // "Check again" just reloads the page (shows the latest saved answer)
-  $("reload").addEventListener("click", function () { location.reload(); });
+  // The text breaks into letters that scatter outward, then the page reloads.
+  $("reload").addEventListener("click", function () {
+    var btn = this, sq = document.querySelector(".square");
+    if (btn.disabled) return;
+    btn.disabled = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { location.reload(); return; }
+    var rnd = function (n) { return (Math.random() * 2 - 1) * n; };
+    sq.querySelectorAll(".label, .headline, .count, .badge, .detail").forEach(function (el) {
+      if (el.hidden || !el.textContent) return;
+      var words = el.textContent.split(" ");
+      el.textContent = "";
+      words.forEach(function (word, i) {
+        var w = document.createElement("span"); w.className = "w";
+        word.split("").forEach(function (c) {
+          var s = document.createElement("span"); s.className = "ch"; s.textContent = c;
+          s.style.setProperty("--dx", rnd(230) + "px"); s.style.setProperty("--dy", rnd(230) + "px");
+          s.style.setProperty("--r", rnd(200) + "deg"); w.appendChild(s);
+        });
+        el.appendChild(w);
+        if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
+      });
+    });
+    var b = sq.getBoundingClientRect();
+    for (var i = 0; i < 26; i++) {
+      var p = document.createElement("i"); p.className = "shard";
+      p.style.left = (b.left + b.width / 2 + rnd(b.width / 3)) + "px";
+      p.style.top = (b.top + b.height / 2 + rnd(b.height / 3)) + "px";
+      p.style.setProperty("--dx", rnd(260) + "px"); p.style.setProperty("--dy", rnd(260) + "px");
+      p.style.setProperty("--r", rnd(360) + "deg"); document.body.appendChild(p);
+    }
+    requestAnimationFrame(function () { sq.classList.add("scatter"); });
+    setTimeout(function () { location.reload(); }, 850);
+  });
 
   /* ================= small helpers: toast + dialog ================= */
 
