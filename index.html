@@ -376,12 +376,50 @@
     $("count").hidden = true; $("badge").hidden = true;
   }
 
-  function load() {
-    fetch("result.json?t=" + Date.now(), { cache: "no-store" })
-      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-      .then(render)
+  /* The daily check saves result.json and subscriptions.json on a separate branch called "data".
+     Saving there does NOT redeploy the website; the page just reads the files from GitHub. */
+  var DATA_BASE = (function () {
+    var m = location.hostname.match(/^(.+)\.github\.io$/), repo = location.pathname.split("/")[1];
+    return m && repo ? "https://raw.githubusercontent.com/" + m[1] + "/" + repo + "/data/" : "";
+  })();
+
+  // Reads a file from the data branch (cache-busted once per minute); falls back to the site's own copy.
+  async function readData(name) {
+    var urls = [];
+    if (DATA_BASE) urls.push(DATA_BASE + name + "?t=" + Math.floor(Date.now() / 60000));
+    urls.push(name + "?t=" + Date.now());
+    var lastErr;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var res = await fetch(urls[i], { cache: "no-store" });
+        if (res.ok) return await res.json();
+        lastErr = new Error("HTTP " + res.status);
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr;
+  }
+
+  // Quiet schedule: nothing for 24 h after the last check, then look once an hour until a newer one shows up.
+  var pollTimer, lastCheckedSeen;
+  function schedulePoll(r) {
+    clearTimeout(pollTimer);
+    var t = r && r.checked_at ? new Date(r.checked_at).getTime() : 0;
+    var wait = t ? Math.max(t + 24 * 3600000 - Date.now(), 0) : 0;
+    if (wait === 0) wait = 3600000;                       // overdue: try again in an hour
+    pollTimer = setTimeout(function () { load(true); }, Math.min(wait, 2147000000));
+  }
+
+  function load(isPoll) {
+    return readData("result.json")
+      .then(function (r) {
+        var key = r && r.checked_at || "";
+        if (!isPoll || key !== lastCheckedSeen) render(r);   // timer ticks only redraw when something is new
+        lastCheckedSeen = key;
+        schedulePoll(r);
+      })
       .catch(function (e) {
-        fail("Open this page from its web link (not as a local file). " + e.message);
+        if (!isPoll) fail("Couldn’t read the result. " + e.message);
+        schedulePoll(null);
       });
   }
 
@@ -610,7 +648,7 @@
       if (!run) { say("Still running. Press “Check again” in a minute or two."); return; }
       if (run.conclusion !== "success") { say("The check failed. Open the Actions tab on GitHub to see the error."); return; }
       // read the fresh answer straight from the repo (the website itself can lag a minute)
-      var fr = await api("/repos/" + slug + "/contents/result.json?ref=main&t=" + Date.now(),
+      var fr = await api("/repos/" + slug + "/contents/result.json?ref=data&t=" + Date.now(),
                          { headers: { "Accept": "application/vnd.github.raw+json" } });
       if (fr.ok) { render(await fr.json()); say("Done ✓ fresh result loaded."); }
       else { load(); say("Done ✓"); }
@@ -651,9 +689,7 @@
 
   async function readSubs() {
     try {
-      var r = await fetch("subscriptions.json?t=" + Date.now(), { cache: "no-store" });
-      if (!r.ok) return [];
-      var j = await r.json();
+      var j = await readData("subscriptions.json");
       return Array.isArray(j) ? j : [];
     } catch (e) { return []; }
   }
@@ -727,7 +763,7 @@
   /* Public notification gateway (a free Cloudflare Worker, see worker.js).
      It holds the GitHub key, so visitors never need a password for notifications.
      Paste your Worker address here, e.g. "https://gta6-push.yourname.workers.dev" */
-  var PUSH_API = "https://gta6-push.dragonspirit787.workers.dev/";
+  var PUSH_API = "https://REPLACE-ME.workers.dev";
 
   async function pushApi(action, payload) {
     if (!PUSH_API || PUSH_API.indexOf("REPLACE-ME") !== -1) {
