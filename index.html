@@ -763,7 +763,7 @@
   /* Public notification gateway (a free Cloudflare Worker, see worker.js).
      It holds the GitHub key, so visitors never need a password for notifications.
      Paste your Worker address here, e.g. "https://gta6-push.yourname.workers.dev" */
-  var PUSH_API = "https://REPLACE-ME.workers.dev";
+  var PUSH_API = "https://gta6-push.dragonspirit787.workers.dev/";
 
   async function pushApi(action, payload) {
     if (!PUSH_API || PUSH_API.indexOf("REPLACE-ME") !== -1) {
