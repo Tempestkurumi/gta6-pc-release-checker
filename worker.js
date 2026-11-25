@@ -11,6 +11,8 @@
 //   REPO            (Text)     yourname/your-repo
 //   ALLOWED_ORIGIN  (Text)     https://yourname.github.io      (no trailing slash, no path)
 //   REF             (Text, optional)  branch name, default "main"
+//   TURNSTILE_SECRET (Secret)  secret key of your Cloudflare Turnstile widget (blocks bots).
+//                              Not set = the bot check is skipped.
 // Optional: bind a KV namespace named RATE to turn on per-visitor limits (recommended).
 
 const PUSH_HOSTS = [
@@ -79,6 +81,23 @@ async function overLimit(env, request, action) {
   }
 }
 
+// Cloudflare Turnstile: the page gets a one-time token from Cloudflare after a (usually invisible)
+// bot check. Only Cloudflare can say whether the token is real, and only this worker holds the secret.
+async function turnstileOk(env, token, request) {
+  if (!env.TURNSTILE_SECRET) return true;            // not set up yet: skip the check
+  if (typeof token !== "string" || !token || token.length > 2048) return false;
+  const form = new FormData();
+  form.append("secret", env.TURNSTILE_SECRET);
+  form.append("response", token);
+  const ip = request.headers.get("CF-Connecting-IP");
+  if (ip) form.append("remoteip", ip);
+  try {
+    const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
+    const j = await r.json();
+    return j.success === true;
+  } catch { return false; }
+}
+
 async function dispatchPush(env, inputs) {
   const r = await fetch(`https://api.github.com/repos/${env.REPO}/actions/workflows/push.yml/dispatches`, {
     method: "POST",
@@ -120,6 +139,9 @@ export default {
     if (raw.length > 6000) return reply(413, "too big");
     let body;
     try { body = JSON.parse(raw); } catch { return reply(400, "bad json"); }
+
+    // Bot check first: a request without a valid token costs us nothing (no KV write, no GitHub run).
+    if (!(await turnstileOk(env, body.turnstile, request))) return reply(403, "security check failed");
 
     if (await overLimit(env, request, action)) return reply(429, "slow down");
 

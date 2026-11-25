@@ -85,6 +85,7 @@
       </div>
       <p id="nCount"></p>
       <p id="nLimit">Heads up: this checker currently supports up to 500 devices, and I&rsquo;m working on raising that. Questions or problems? <a id="nContact" href="#" target="_blank" rel="noopener">Contact me on GitHub</a>.</p>
+      <div id="tsBox"></div>
     </div>
 
     <div class="card">
@@ -629,14 +630,51 @@
      Paste your Worker address here, e.g. "https://gta6-push.yourname.workers.dev" */
   var PUSH_API = "https://gta6-push.dragonspirit787.workers.dev/";
 
+  /* Cloudflare Turnstile (bot check). The site key is public by design; the secret stays in the worker.
+     Paste your site key here. Leave "PASTE" in it to switch the check off. */
+  var TURNSTILE_SITEKEY = "0x4AAAAAAGSjdyqP9FRmIF2O";
+  var tsLoading = null, tsWidget = null;
+
+  function loadTurnstile() {
+    if (window.turnstile) return Promise.resolve();
+    if (!tsLoading) tsLoading = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      s.async = true; s.onload = resolve;
+      s.onerror = function () { tsLoading = null; reject(new Error("Couldn’t load the security check")); };
+      document.head.appendChild(s);
+    });
+    return tsLoading;
+  }
+
+  // Tokens work once, so every request gets a fresh one.
+  async function getTurnstileToken() {
+    if (!TURNSTILE_SITEKEY || TURNSTILE_SITEKEY.indexOf("PASTE") !== -1) return "";
+    await loadTurnstile();
+    var box = $("tsBox");
+    if (tsWidget !== null) { try { window.turnstile.remove(tsWidget); } catch (e) {} tsWidget = null; }
+    box.innerHTML = "";
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error("The security check took too long. Try again")); }, 60000);
+      tsWidget = window.turnstile.render(box, {
+        sitekey: TURNSTILE_SITEKEY,
+        appearance: "interaction-only",
+        callback: function (t) { clearTimeout(timer); resolve(t); },
+        "error-callback": function () { clearTimeout(timer); reject(new Error("The security check failed. Reload the page and try again")); }
+      });
+    });
+  }
+
   async function pushApi(action, payload) {
     if (!PUSH_API || PUSH_API.indexOf("REPLACE-ME") !== -1) {
       say("Notifications aren’t connected yet: the site owner needs to set PUSH_API in index.html."); return false;
     }
     try {
+      payload.turnstile = await getTurnstileToken();
       var r = await fetch(PUSH_API + "/" + action, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
       });
+      if (r.status === 403) { say("The security check didn’t pass. Reload the page and try again."); return false; }
       if (r.status === 429) { say("Too many requests from this device. Try again in a bit."); return false; }
       if (!r.ok) { say("The notification service said no (error " + r.status + ")."); return false; }
       return true;
