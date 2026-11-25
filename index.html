@@ -76,6 +76,9 @@
   }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   #hint { max-width: 36ch; }
+  #dev { display: flex; flex-direction: column; align-items: center; gap: 10px;
+         border: 1px dashed var(--line); border-radius: 14px; padding: 14px; width: min(86vw, 420px); }
+  #dev[hidden] { display: none; }
   a.meta { text-decoration: underline; }
   button:disabled { opacity: .6; cursor: default; }
 </style>
@@ -98,11 +101,15 @@
 </details>
 
 <div class="actions">
-  <button id="checkNow" type="button">Check now</button>
-  <button id="reload" type="button">Refresh</button>
+  <button id="reload" type="button">Check again</button>
+  <button id="devToggle" type="button" aria-expanded="false">Dev control panel</button>
 </div>
-<div class="meta" id="hint" hidden></div>
-<a class="meta" id="forget" href="#" hidden>Forget the saved key on this device</a>
+
+<section id="dev" hidden>
+  <button id="checkNow" type="button">Start GTA 6 check workflow</button>
+  <div class="meta" id="hint" hidden></div>
+  <a class="meta" id="forget" href="#" hidden>Forget the saved key on this device</a>
+</section>
 
 <script>
 (function () {
@@ -199,18 +206,30 @@
       .then(function () { if (typeof done === "function") setTimeout(done, 500); });
   }
 
-  // "Refresh" only re-reads the saved answer (instant). It can't start a new check.
-  $("reload").addEventListener("click", function () {
-    var b = this;
-    b.textContent = "Refreshing…";
-    load(function () {
-      b.textContent = "Up to date ✓";
-      setTimeout(function () { b.textContent = "Refresh"; }, 1800);
-    });
-  });
+  // "Check again" just reloads the page (shows the latest saved answer)
+  $("reload").addEventListener("click", function () { location.reload(); });
 
-  // ---- "Check now": starts the GitHub workflow with a key saved only on this device ----
+  // ---- Dev control panel: start the GitHub workflow (behind a code, key saved only on this device) ----
   var KEY = "gta6pc_key";
+  var LABEL = "Start GTA 6 check workflow";
+  var CODE_HASH = "ecd9806672c06d4b03fc8e931847c20dd6aa5ad4e8d7085230683ae8abf17b66"; // sha256("gta6pc:" + code)
+  var unlocked = false;
+
+  async function sha256hex(s) {
+    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+      return ("0" + b.toString(16)).slice(-2);
+    }).join("");
+  }
+  async function unlock() {
+    if (unlocked) return true;
+    if (!(window.crypto && crypto.subtle)) { say("The code check needs the secure (https) page link."); return false; }
+    var c = (prompt("Enter the code") || "").trim();
+    if (!c) return false;
+    if ((await sha256hex("gta6pc:" + c)) === CODE_HASH) { unlocked = true; return true; }
+    say("Wrong code.");
+    return false;
+  }
   var host = location.hostname.match(/^(.+)\.github\.io$/);
   var repoName = location.pathname.split("/")[1];
   var slug = host && repoName ? host[1] + "/" + repoName : "";
@@ -236,6 +255,7 @@
 
   async function checkNow() {
     var btn = $("checkNow");
+    if (!(await unlock())) return;
     if (!slug) { say("Open this page from its GitHub Pages link to use this button."); return; }
     if (!getKey()) {
       var k = (prompt("Paste your GitHub key. It is saved only on this device.") || "").trim();
@@ -252,7 +272,7 @@
       if (r.status !== 204) {
         if (r.status === 401 || r.status === 403 || r.status === 404) {
           clearKey(); showForget();
-          say("GitHub didn’t accept the key (error " + r.status + "). Tap Check now to paste a new one.");
+          say("GitHub didn’t accept the key (error " + r.status + "). Tap the button to paste a new one.");
         } else {
           say("GitHub said no (error " + r.status + ").");
         }
@@ -286,11 +306,16 @@
     } catch (e) {
       say("Couldn’t reach GitHub: " + e.message);
     } finally {
-      btn.disabled = false; btn.textContent = "Check now";
+      btn.disabled = false; btn.textContent = LABEL;
     }
   }
 
   $("checkNow").addEventListener("click", checkNow);
+  $("devToggle").addEventListener("click", function () {
+    var panel = $("dev");
+    panel.hidden = !panel.hidden;
+    this.setAttribute("aria-expanded", String(!panel.hidden));
+  });
   $("forget").addEventListener("click", function (ev) {
     ev.preventDefault(); clearKey(); showForget(); say("Key removed from this device.");
   });
