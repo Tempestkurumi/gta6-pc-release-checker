@@ -234,9 +234,38 @@
   var repoName = location.pathname.split("/")[1];
   var slug = host && repoName ? host[1] + "/" + repoName : "";
 
-  function getKey() { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+  var memKey = "";      // key unlocked from lock.json (kept in memory only, never saved)
+  var lockCache;        // undefined = not looked for yet, null = no lock.json, object = lock.json
+
+  function getKey() {
+    if (memKey) return memKey;
+    try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; }
+  }
   function setKey(k) { try { localStorage.setItem(KEY, k); } catch (e) {} }
-  function clearKey() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  function clearKey() { memKey = ""; try { localStorage.removeItem(KEY); } catch (e) {} }
+
+  // lock.json = the GitHub key, encrypted with your code (made by make-lock.html)
+  async function loadLock() {
+    try {
+      var r = await fetch("lock.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return null;
+      var j = await r.json();
+      return j && j.data && j.salt && j.iv && j.iter ? j : null;
+    } catch (e) { return null; }
+  }
+  function b64d(s) {
+    var bin = atob(s), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function decryptLock(lock, code) {
+    var base = await crypto.subtle.importKey("raw", new TextEncoder().encode(code), "PBKDF2", false, ["deriveKey"]);
+    var key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64d(lock.salt), iterations: lock.iter, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    var plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(lock.iv) }, key, b64d(lock.data));
+    return new TextDecoder().decode(plain);   // throws if the code is wrong
+  }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function say(msg) { $("hint").hidden = !msg; $("hint").textContent = msg || ""; }
   function showForget() { $("forget").hidden = !getKey(); }
@@ -255,12 +284,25 @@
 
   async function checkNow() {
     var btn = $("checkNow");
-    if (!(await unlock())) return;
     if (!slug) { say("Open this page from its GitHub Pages link to use this button."); return; }
-    if (!getKey()) {
-      var k = (prompt("Paste your GitHub key. It is saved only on this device.") || "").trim();
-      if (!k) return;
-      setKey(k); showForget();
+    if (lockCache === undefined) lockCache = await loadLock();
+    if (lockCache) {
+      // the key is stored encrypted in lock.json: the code unlocks it
+      if (!memKey) {
+        if (!(window.crypto && crypto.subtle)) { say("This needs the secure (https) page link."); return; }
+        var code = (prompt("Enter the code") || "").trim();
+        if (!code) return;
+        try { memKey = await decryptLock(lockCache, code); }
+        catch (e) { say("Wrong code."); return; }
+      }
+    } else {
+      // no lock.json: ask for the code, then for the key (saved on this device)
+      if (!(await unlock())) return;
+      if (!getKey()) {
+        var k = (prompt("Paste your GitHub key. It is saved only on this device.") || "").trim();
+        if (!k) return;
+        setKey(k); showForget();
+      }
     }
     btn.disabled = true; btn.textContent = "Starting…"; say("");
     var t0 = Date.now();
@@ -272,7 +314,9 @@
       if (r.status !== 204) {
         if (r.status === 401 || r.status === 403 || r.status === 404) {
           clearKey(); showForget();
-          say("GitHub didn’t accept the key (error " + r.status + "). Tap the button to paste a new one.");
+          say(lockCache
+            ? "GitHub didn’t accept the stored key (error " + r.status + "). It may have expired: make a new lock.json."
+            : "GitHub didn’t accept the key (error " + r.status + "). Tap the button to paste a new one.");
         } else {
           say("GitHub said no (error " + r.status + ").");
         }
