@@ -24,7 +24,7 @@
       --card: #15241c; --accent: #93a39a; --accent-bg: #1b2d23;
     }
   }
-  /* colour of the square depends on the answer */
+  /* colour of everything depends on the answer */
   body[data-state="none"]      { --accent: #6b7a72; }
   /* rumor: everything yellow (page, outline, text) */
   body[data-state="rumored"] {
@@ -43,8 +43,11 @@
     font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
-    gap: 20px;
+    gap: 20px; transition: background .3s;
   }
+  body.menu-open, body.view-notif { overflow: hidden; }
+
+  /* ---------- main square ---------- */
   .square {
     width: min(86vw, 420px); aspect-ratio: 1 / 1;
     background: var(--card); border: 3px solid var(--accent); border-radius: 22px;
@@ -69,21 +72,146 @@
   li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
   li a { color: var(--fg); text-decoration: none; font-weight: 600; word-break: break-word; }
   li small { display: block; color: var(--muted); margin-top: 2px; }
-  button, .btn {
-    font: inherit; font-size: 14px; color: var(--muted); background: none;
-    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
-    text-decoration: none; display: inline-block;
-  }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-  #hint { max-width: 36ch; }
-  #dev { display: flex; flex-direction: column; align-items: center; gap: 10px;
-         border: 1px dashed var(--line); border-radius: 14px; padding: 14px; width: min(86vw, 420px); }
-  #dev[hidden] { display: none; }
   a.meta { text-decoration: underline; }
-  button:disabled { opacity: .6; cursor: default; }
+
+  .pill {
+    font: inherit; font-size: 14px; color: var(--fg); background: var(--card);
+    border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; cursor: pointer;
+    transition: border-color .2s, opacity .2s;
+  }
+  .pill:hover, .pill:focus-visible { border-color: var(--accent); }
+  .pill:disabled { opacity: .55; cursor: default; }
+  .pill.primary { border-color: var(--accent); color: var(--accent); font-weight: 650; }
+
+  /* ---------- hamburger ---------- */
+  .burger {
+    position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; z-index: 30;
+    width: 46px; height: 46px; padding: 0; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--card); cursor: pointer; display: grid; place-content: center; gap: 5px;
+  }
+  .burger span {
+    display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--fg);
+    transition: transform .28s ease, opacity .2s ease;
+  }
+  body.menu-open .burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  body.menu-open .burger span:nth-child(2) { opacity: 0; }
+  body.menu-open .burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  #backdrop {
+    position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.5);
+    opacity: 0; visibility: hidden; transition: opacity .28s, visibility .28s;
+  }
+  body.menu-open #backdrop { opacity: 1; visibility: visible; }
+
+  #sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 25; width: min(82vw, 310px);
+    background: var(--card); border-right: 1px solid var(--line);
+    padding: calc(70px + env(safe-area-inset-top)) 12px 20px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 4px;
+    transform: translateX(-104%); visibility: hidden;
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), visibility .3s;
+  }
+  body.menu-open #sidebar { transform: none; visibility: visible; }
+  .side-title { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 0 12px 8px; }
+  .side-item {
+    display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; border: 0;
+    border-radius: 12px; background: none; color: var(--fg); font: inherit; font-size: 16px;
+    text-align: left; text-decoration: none; cursor: pointer; transition: background .2s;
+  }
+  .side-item:hover, .side-item:focus-visible { background: var(--accent-bg); }
+  .side-item svg { flex: none; color: var(--accent); }
+  .chev { margin-left: auto; transition: transform .28s ease; }
+  .acc.open .chev { transform: rotate(180deg); }
+  .acc-body { max-height: 0; overflow: hidden; transition: max-height .32s ease; }
+  .acc.open .acc-body { max-height: 240px; }
+  .acc-inner { padding: 8px 12px 12px 48px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .acc-inner .pill { text-align: left; }
+
+  /* ---------- notification settings view ---------- */
+  .view {
+    position: fixed; inset: 0; z-index: 40; background: var(--bg); color: var(--fg);
+    overflow-y: auto; padding: max(14px, env(safe-area-inset-top)) 16px 40px;
+    transform: translateX(100%); visibility: hidden;
+    transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility .32s;
+  }
+  body.view-notif .view { transform: none; visibility: visible; }
+  .view-inner { max-width: 520px; margin: 0 auto; display: grid; gap: 16px; }
+  .view-head { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+  .view-head h2 { margin: 0; font-size: 21px; }
+  .back {
+    width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--card); color: var(--fg); cursor: pointer; display: grid; place-items: center; padding: 0;
+  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 12px; }
+  .card h3 { margin: 0; font-size: 15px; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .row-title { font-weight: 650; }
+  .check { display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+  .check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+  .switch { position: relative; width: 54px; height: 31px; flex: none; }
+  .switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 2; }
+  .switch .track { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .25s; }
+  .switch .knob { position: absolute; top: 3px; left: 3px; width: 25px; height: 25px; border-radius: 50%; background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.35); transition: transform .25s; }
+  .switch input:checked ~ .track { background: var(--accent); }
+  .switch input:checked ~ .knob { transform: translateX(23px); }
+  .switch input:disabled { cursor: not-allowed; }
+  .switch input:focus-visible ~ .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- toast + dialog ---------- */
+  #toast {
+    position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 90;
+    transform: translate(-50%, 24px); opacity: 0; pointer-events: none;
+    max-width: min(92vw, 420px); padding: 10px 16px; text-align: center; font-size: 14px;
+    background: var(--card); color: var(--fg); border: 2px solid var(--accent); border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.3); transition: opacity .25s, transform .25s;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #modal {
+    position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
+    background: rgba(0,0,0,.55); opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s;
+  }
+  #modal.show { opacity: 1; visibility: visible; }
+  .dialog { width: min(92vw, 360px); display: grid; gap: 12px; padding: 18px; background: var(--card); border: 2px solid var(--accent); border-radius: 18px; }
+  .dialog p { margin: 0; font-weight: 600; }
+  .dialog input { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
+  .dialog .buttons { justify-content: flex-end; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body data-state="none">
+
+<button id="menuBtn" class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="sidebar">
+  <span></span><span></span><span></span>
+</button>
+<div id="backdrop"></div>
+
+<aside id="sidebar" aria-label="Menu">
+  <div class="side-title">GTA 6 PC checker</div>
+
+  <a class="side-item" id="goNotif" href="#/notifications">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    <span>Notification settings</span>
+  </a>
+
+  <div class="acc" id="devAcc">
+    <button class="side-item" id="devToggle" type="button" aria-expanded="false" aria-controls="devBody">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      <span>Dev control panel</span>
+      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body" id="devBody">
+      <div class="acc-inner">
+        <button id="checkNow" class="pill primary" type="button">Start GTA 6 check workflow</button>
+        <a class="meta" id="forget" href="#" hidden>Forget the saved key on this device</a>
+      </div>
+    </div>
+  </div>
+</aside>
 
 <main class="square" aria-live="polite">
   <div class="label">GTA 6 &middot; PC release</div>
@@ -100,20 +228,72 @@
   <ul id="sourceList"></ul>
 </details>
 
-<div class="actions">
-  <button id="reload" type="button">Check again</button>
-  <button id="devToggle" type="button" aria-expanded="false">Dev control panel</button>
-</div>
+<button id="reload" class="pill" type="button">Check again</button>
 
-<section id="dev" hidden>
-  <button id="checkNow" type="button">Start GTA 6 check workflow</button>
-  <div class="meta" id="hint" hidden></div>
-  <a class="meta" id="forget" href="#" hidden>Forget the saved key on this device</a>
+<!-- ============ Notification settings (a second page) ============ -->
+<section class="view" id="viewNotif" aria-label="Notification settings">
+  <div class="view-inner">
+    <div class="view-head">
+      <button class="back" id="nBack" type="button" aria-label="Back">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <h2>Notification settings</h2>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="row-title">Notifications on this device</div>
+          <p id="nState">Checking&hellip;</p>
+        </div>
+        <label class="switch" aria-label="Notifications on this device">
+          <input type="checkbox" id="nSwitch" disabled>
+          <span class="track"></span><span class="knob"></span>
+        </label>
+      </div>
+      <p id="nCount"></p>
+    </div>
+
+    <div class="card">
+      <h3>Tell me when&hellip;</h3>
+      <label class="check"><input type="checkbox" id="pOfficial" checked> The PC release is official or confirmed</label>
+      <label class="check"><input type="checkbox" id="pReleased" checked> It&rsquo;s out on PC</label>
+      <label class="check"><input type="checkbox" id="pRumor"> New rumors or rumored date changes</label>
+      <div class="buttons"><button class="pill primary" id="nSave" type="button" disabled>Save settings</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Test it</h3>
+      <p>Sends a real notification to this device in about a minute. Press it, then <b>close the app or browser</b> and wait. If it pops up, background notifications work.</p>
+      <div class="buttons">
+        <button class="pill primary" id="nTest" type="button">Send test notification</button>
+        <button class="pill" id="nLocal" type="button">Show one right now</button>
+      </div>
+      <p>&ldquo;Show one right now&rdquo; only checks that your browser allows notifications. It doesn&rsquo;t test the background part.</p>
+    </div>
+  </div>
 </section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="dialog">
+    <p id="mTitle"></p>
+    <input id="mInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="buttons">
+      <button class="pill" id="mCancel" type="button">Cancel</button>
+      <button class="pill primary" id="mOk" type="button">OK</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function () {
+  "use strict";
   var $ = function (id) { return document.getElementById(id); };
+  var POLL_MS = window.__GTA6_POLL_MS || 5000;
+
+  /* ================= the answer on the main page ================= */
 
   function ago(iso) {
     var s = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -195,45 +375,90 @@
     $("count").hidden = true; $("badge").hidden = true;
   }
 
-  function load(done) {
-    if (!done) $("headline").textContent = "Checking…";
+  function load() {
     fetch("result.json?t=" + Date.now(), { cache: "no-store" })
       .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
       .then(render)
       .catch(function (e) {
         fail("Open this page from its web link (not as a local file). " + e.message);
-      })
-      .then(function () { if (typeof done === "function") setTimeout(done, 500); });
+      });
   }
 
   // "Check again" just reloads the page (shows the latest saved answer)
   $("reload").addEventListener("click", function () { location.reload(); });
 
-  // ---- Dev control panel: start the GitHub workflow (behind a code, key saved only on this device) ----
+  /* ================= small helpers: toast + dialog ================= */
+
+  var toastTimer;
+  function say(msg, sticky) {
+    var t = $("toast");
+    clearTimeout(toastTimer);
+    if (!msg) { t.classList.remove("show"); return; }
+    t.textContent = msg; t.classList.add("show");
+    if (!sticky) toastTimer = setTimeout(function () { t.classList.remove("show"); }, 7000);
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function askText(message, secret) {
+    return new Promise(function (resolve) {
+      var modal = $("modal"), input = $("mInput");
+      $("mTitle").textContent = message;
+      input.type = secret ? "password" : "text"; input.value = "";
+      modal.classList.add("show");
+      setTimeout(function () { input.focus(); }, 60);
+      function done(v) {
+        modal.classList.remove("show");
+        $("mOk").removeEventListener("click", ok);
+        $("mCancel").removeEventListener("click", cancel);
+        input.removeEventListener("keydown", key);
+        resolve(v);
+      }
+      function ok() { done(input.value.trim()); }
+      function cancel() { done(null); }
+      function key(e) { if (e.key === "Enter") ok(); else if (e.key === "Escape") cancel(); }
+      $("mOk").addEventListener("click", ok);
+      $("mCancel").addEventListener("click", cancel);
+      input.addEventListener("keydown", key);
+    });
+  }
+
+  /* ================= menu (hamburger sidebar) ================= */
+
+  var cameFromMain = false;
+  function setMenu(open) {
+    document.body.classList.toggle("menu-open", open);
+    $("menuBtn").setAttribute("aria-expanded", String(open));
+  }
+  $("menuBtn").addEventListener("click", function () {
+    setMenu(!document.body.classList.contains("menu-open"));
+  });
+  $("backdrop").addEventListener("click", function () { setMenu(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") setMenu(false); });
+  $("devToggle").addEventListener("click", function () {
+    var acc = $("devAcc"), open = !acc.classList.contains("open");
+    acc.classList.toggle("open", open);
+    this.setAttribute("aria-expanded", String(open));
+  });
+  $("goNotif").addEventListener("click", function () { cameFromMain = true; setMenu(false); });
+  $("nBack").addEventListener("click", function () {
+    if (cameFromMain) history.back(); else location.replace("#/");
+  });
+
+  function route() {
+    var on = location.hash === "#/notifications";
+    document.body.classList.toggle("view-notif", on);
+    if (on) { setMenu(false); refreshNotif(); }
+  }
+  window.addEventListener("hashchange", route);
+
+  /* ================= GitHub access (key locked by your code) ================= */
+
   var KEY = "gta6pc_key";
   var LABEL = "Start GTA 6 check workflow";
   var CODE_HASH = "ecd9806672c06d4b03fc8e931847c20dd6aa5ad4e8d7085230683ae8abf17b66"; // sha256("gta6pc:" + code)
-  var unlocked = false;
-
-  async function sha256hex(s) {
-    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-      return ("0" + b.toString(16)).slice(-2);
-    }).join("");
-  }
-  async function unlock() {
-    if (unlocked) return true;
-    if (!(window.crypto && crypto.subtle)) { say("The code check needs the secure (https) page link."); return false; }
-    var c = (prompt("Enter the code") || "").trim();
-    if (!c) return false;
-    if ((await sha256hex("gta6pc:" + c)) === CODE_HASH) { unlocked = true; return true; }
-    say("Wrong code.");
-    return false;
-  }
   var host = location.hostname.match(/^(.+)\.github\.io$/);
   var repoName = location.pathname.split("/")[1];
   var slug = host && repoName ? host[1] + "/" + repoName : "";
-
   var memKey = "";      // key unlocked from lock.json (kept in memory only, never saved)
   var lockCache;        // undefined = not looked for yet, null = no lock.json, object = lock.json
 
@@ -243,6 +468,24 @@
   }
   function setKey(k) { try { localStorage.setItem(KEY, k); } catch (e) {} }
   function clearKey() { memKey = ""; try { localStorage.removeItem(KEY); } catch (e) {} }
+  function showForget() { $("forget").hidden = !getKey() || !!memKey; }
+
+  async function sha256hex(s) {
+    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+      return ("0" + b.toString(16)).slice(-2);
+    }).join("");
+  }
+  function b64d(s) {
+    var bin = atob(s), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function toBytes(b64url) {
+    var p = b64url.replace(/-/g, "+").replace(/_/g, "/");
+    while (p.length % 4) p += "=";
+    return b64d(p);
+  }
 
   // lock.json = the GitHub key, encrypted with your code (made by make-lock.html)
   async function loadLock() {
@@ -253,11 +496,6 @@
       return j && j.data && j.salt && j.iv && j.iter ? j : null;
     } catch (e) { return null; }
   }
-  function b64d(s) {
-    var bin = atob(s), out = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  }
   async function decryptLock(lock, code) {
     var base = await crypto.subtle.importKey("raw", new TextEncoder().encode(code), "PBKDF2", false, ["deriveKey"]);
     var key = await crypto.subtle.deriveKey(
@@ -266,9 +504,40 @@
     var plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(lock.iv) }, key, b64d(lock.data));
     return new TextDecoder().decode(plain);   // throws if the code is wrong
   }
-  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  function say(msg) { $("hint").hidden = !msg; $("hint").textContent = msg || ""; }
-  function showForget() { $("forget").hidden = !getKey(); }
+
+  var unlocked = false;
+  async function unlock() {          // used only when there is no lock.json
+    if (unlocked) return true;
+    if (!(window.crypto && crypto.subtle)) { say("The code check needs the secure (https) page link."); return false; }
+    var c = await askText("Enter the code", true);
+    if (!c) return false;
+    if ((await sha256hex("gta6pc:" + c)) === CODE_HASH) { unlocked = true; return true; }
+    say("Wrong code.");
+    return false;
+  }
+
+  // Makes sure we have the GitHub key (asks for the code when needed). true = ready.
+  async function ensureKey() {
+    if (!slug) { say("Open this page from its GitHub Pages link to use this."); return false; }
+    if (lockCache === undefined) lockCache = await loadLock();
+    if (lockCache) {
+      if (!memKey) {
+        if (!(window.crypto && crypto.subtle)) { say("This needs the secure (https) page link."); return false; }
+        var code = await askText("Enter the code", true);
+        if (!code) return false;
+        try { memKey = await decryptLock(lockCache, code); }
+        catch (e) { say("Wrong code."); return false; }
+      }
+      return true;
+    }
+    if (!(await unlock())) return false;
+    if (!getKey()) {
+      var k = await askText("Paste your GitHub key. It is saved only on this device.", true);
+      if (!k) return false;
+      setKey(k); showForget();
+    }
+    return true;
+  }
 
   function api(path, opts) {
     opts = opts || {};
@@ -282,66 +551,58 @@
                  { method: opts.method || "GET", headers: headers, body: opts.body });
   }
 
-  async function checkNow() {
-    var btn = $("checkNow");
-    if (!slug) { say("Open this page from its GitHub Pages link to use this button."); return; }
-    if (lockCache === undefined) lockCache = await loadLock();
-    if (lockCache) {
-      // the key is stored encrypted in lock.json: the code unlocks it
-      if (!memKey) {
-        if (!(window.crypto && crypto.subtle)) { say("This needs the secure (https) page link."); return; }
-        var code = (prompt("Enter the code") || "").trim();
-        if (!code) return;
-        try { memKey = await decryptLock(lockCache, code); }
-        catch (e) { say("Wrong code."); return; }
-      }
+  function keyProblem(status) {
+    if (status === 401 || status === 403 || status === 404) {
+      var wasLocked = !!lockCache;
+      clearKey(); showForget();
+      say(wasLocked
+        ? "GitHub didn’t accept the stored key (error " + status + "). It may have expired: make a new lock.json."
+        : "GitHub didn’t accept the key (error " + status + "). Try again to paste a new one.");
     } else {
-      // no lock.json: ask for the code, then for the key (saved on this device)
-      if (!(await unlock())) return;
-      if (!getKey()) {
-        var k = (prompt("Paste your GitHub key. It is saved only on this device.") || "").trim();
-        if (!k) return;
-        setKey(k); showForget();
+      say("GitHub said no (error " + status + ").");
+    }
+  }
+
+  // Starts one of the workflows. inputs = {name: "value"} or null.
+  async function dispatchWorkflow(file, inputs) {
+    var body = { ref: "main" };
+    if (inputs) body.inputs = inputs;
+    var r = await api("/repos/" + slug + "/actions/workflows/" + file + "/dispatches", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    });
+    if (r.status === 204) return true;
+    keyProblem(r.status);
+    return false;
+  }
+
+  // Waits (up to ~5 min) for the run we just started to finish. Returns the run or null.
+  async function waitForRun(file, t0) {
+    for (var i = 0; i < 60; i++) {
+      await sleep(POLL_MS);
+      var rr = await api("/repos/" + slug + "/actions/workflows/" + file + "/runs?event=workflow_dispatch&per_page=5");
+      if (!rr.ok) continue;
+      var runs = (await rr.json()).workflow_runs || [];
+      for (var j = 0; j < runs.length; j++) {
+        if (new Date(runs[j].created_at).getTime() >= t0 - 60000 && runs[j].status === "completed") return runs[j];
       }
     }
-    btn.disabled = true; btn.textContent = "Starting…"; say("");
+    return null;
+  }
+
+  /* ================= dev panel: start the check workflow ================= */
+
+  async function checkNow() {
+    var btn = $("checkNow");
+    if (!(await ensureKey())) return;
+    btn.disabled = true; btn.textContent = "Starting…";
     var t0 = Date.now();
     try {
-      var r = await api("/repos/" + slug + "/actions/workflows/check.yml/dispatches", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ref: "main" })
-      });
-      if (r.status !== 204) {
-        if (r.status === 401 || r.status === 403 || r.status === 404) {
-          clearKey(); showForget();
-          say(lockCache
-            ? "GitHub didn’t accept the stored key (error " + r.status + "). It may have expired: make a new lock.json."
-            : "GitHub didn’t accept the key (error " + r.status + "). Tap the button to paste a new one.");
-        } else {
-          say("GitHub said no (error " + r.status + ").");
-        }
-        return;
-      }
+      if (!(await dispatchWorkflow("check.yml"))) return;
       btn.textContent = "Checking…";
-      say("Started. This takes about a minute.");
-
-      // wait for the run to finish (up to ~5 minutes)
-      var done = null;
-      for (var i = 0; i < 60 && !done; i++) {
-        await sleep(5000);
-        var rr = await api("/repos/" + slug + "/actions/workflows/check.yml/runs?event=workflow_dispatch&per_page=5");
-        if (!rr.ok) continue;
-        var runs = (await rr.json()).workflow_runs || [];
-        for (var j = 0; j < runs.length; j++) {
-          if (new Date(runs[j].created_at).getTime() >= t0 - 60000 && runs[j].status === "completed") {
-            done = runs[j]; break;
-          }
-        }
-      }
-      if (!done) { say("Still running. Tap Refresh in a minute or two."); return; }
-      if (done.conclusion !== "success") {
-        say("The check failed. Open the Actions tab on GitHub to see the error."); return;
-      }
+      say("Started. This takes about a minute.", true);
+      var run = await waitForRun("check.yml", t0);
+      if (!run) { say("Still running. Press “Check again” in a minute or two."); return; }
+      if (run.conclusion !== "success") { say("The check failed. Open the Actions tab on GitHub to see the error."); return; }
       // read the fresh answer straight from the repo (the website itself can lag a minute)
       var fr = await api("/repos/" + slug + "/contents/result.json?ref=main&t=" + Date.now(),
                          { headers: { "Accept": "application/vnd.github.raw+json" } });
@@ -353,19 +614,222 @@
       btn.disabled = false; btn.textContent = LABEL;
     }
   }
-
   $("checkNow").addEventListener("click", checkNow);
-  $("devToggle").addEventListener("click", function () {
-    var panel = $("dev");
-    panel.hidden = !panel.hidden;
-    this.setAttribute("aria-expanded", String(!panel.hidden));
-  });
   $("forget").addEventListener("click", function (ev) {
     ev.preventDefault(); clearKey(); showForget(); say("Key removed from this device.");
   });
-  showForget();
+
+  /* ================= notifications ================= */
+
+  var DEFAULT_PREFS = { official: true, released: true, rumor: false };
+  var savedPrefs = { official: true, released: true, rumor: false };   // what GitHub has for this device
+  var vapidCache;
+
+  function supportProblem() {
+    if ("serviceWorker" in navigator && "PushManager" in window && "Notification" in window) return "";
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    var standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    if (ios && !standalone) return "On iPhone, first add this page to your Home Screen (Share → Add to Home Screen) and open it from there.";
+    return "This browser can’t do push notifications.";
+  }
+
+  async function loadVapid() {
+    if (vapidCache !== undefined) return vapidCache;
+    try {
+      var r = await fetch("vapid.json?t=" + Date.now(), { cache: "no-store" });
+      var j = r.ok ? await r.json() : null;
+      vapidCache = j && j.publicKey ? j : null;
+    } catch (e) { vapidCache = null; }
+    return vapidCache;
+  }
+
+  async function readSubs() {
+    try {
+      var r = await fetch("subscriptions.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return [];
+      var j = await r.json();
+      return Array.isArray(j) ? j : [];
+    } catch (e) { return []; }
+  }
+
+  function getReg() {
+    return navigator.serviceWorker.register("sw.js").then(function () { return navigator.serviceWorker.ready; });
+  }
+  function sameBytes(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+  function deviceLabel() {
+    var ua = navigator.userAgent;
+    var os = /Android/.test(ua) ? "Android" : /iPhone|iPad|iPod/.test(ua) ? "iPhone" : /Windows/.test(ua) ? "Windows" :
+             /Mac/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "device";
+    var br = /Edg\//.test(ua) ? "Edge" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" :
+             /Safari\//.test(ua) ? "Safari" : "browser";
+    var app = window.navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    return os + " · " + br + (app ? " (app)" : "");
+  }
+  function readPrefs() {
+    return { official: $("pOfficial").checked, released: $("pReleased").checked, rumor: $("pRumor").checked };
+  }
+  function setPrefs(p) {
+    $("pOfficial").checked = !!p.official; $("pReleased").checked = !!p.released; $("pRumor").checked = !!p.rumor;
+  }
+  function prefsDiffer() {
+    var p = readPrefs();
+    return p.official !== !!savedPrefs.official || p.released !== !!savedPrefs.released || p.rumor !== !!savedPrefs.rumor;
+  }
+
+  var needsRegister = false;
+  function updateSave() { $("nSave").disabled = !($("nSwitch").checked && (needsRegister || prefsDiffer())); }
+
+  async function refreshNotif() {
+    var sw = $("nSwitch"), st = $("nState");
+    var problem = supportProblem();
+    var enable = function (on) {
+      ["pOfficial", "pReleased", "pRumor", "nTest", "nLocal"].forEach(function (id) { $(id).disabled = !on; });
+    };
+    if (problem) { sw.checked = false; sw.disabled = true; enable(false); st.textContent = problem; $("nCount").textContent = ""; updateSave(); return; }
+    var vapid = await loadVapid();
+    if (!vapid) {
+      sw.checked = false; sw.disabled = true; enable(false);
+      st.textContent = "Not set up yet: upload vapid.json to the site (see make-vapid.html).";
+      $("nCount").textContent = ""; updateSave(); return;
+    }
+    sw.disabled = false;
+    var perm = Notification.permission;
+    var reg = await navigator.serviceWorker.getRegistration();
+    var sub = reg ? await reg.pushManager.getSubscription() : null;
+    var subs = await readSubs();
+    var entry = sub ? subs.filter(function (e) { return e.endpoint === sub.endpoint; })[0] : null;
+
+    sw.checked = !!sub && perm === "granted";
+    needsRegister = false;
+    if (perm === "denied") st.textContent = "Blocked in your browser settings. Allow notifications for this site, then come back.";
+    else if (sw.checked && entry) st.textContent = "On. This device is registered ✓";
+    else if (sw.checked) { st.textContent = "Allowed, but not registered yet. Press Save settings."; needsRegister = true; }
+    else st.textContent = "Off on this device.";
+
+    savedPrefs = entry && entry.prefs ? entry.prefs : DEFAULT_PREFS;
+    setPrefs(savedPrefs);
+    $("nCount").textContent = subs.length === 1 ? "1 device is registered." : subs.length + " devices are registered.";
+    enable(sw.checked);
+    $("nLocal").disabled = perm === "denied";
+    updateSave();
+  }
+
+  async function registerOnServer(sub) {
+    if (!(await ensureKey())) return false;
+    var t0 = Date.now();
+    say("Registering this device…", true);
+    var ok = await dispatchWorkflow("push.yml", {
+      action: "subscribe", subscription: JSON.stringify(sub.toJSON()),
+      prefs: JSON.stringify(readPrefs()), label: deviceLabel()
+    });
+    if (!ok) return false;
+    var run = await waitForRun("push.yml", t0);
+    if (!run) { say("Still working on it. Come back to this page in a minute."); return false; }
+    if (run.conclusion !== "success") {
+      say("Registering failed. Open the Actions tab on GitHub (“Push notifications”) to see why."); return false;
+    }
+    say("Saved ✓ This device is registered.");
+    return true;
+  }
+
+  async function enableHere() {
+    // Ask for permission FIRST, straight from the tap (iPhone Safari insists on this)
+    var perm = Notification.permission;
+    if (perm === "default") perm = await Notification.requestPermission();
+    if (perm !== "granted") { say("Notifications are blocked. Allow them for this site in your browser settings."); return false; }
+    var vapid = await loadVapid();
+    if (!vapid) { say("vapid.json is missing on the site."); return false; }
+    var reg = await getReg();
+    var want = toBytes(vapid.publicKey);
+    var sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      var have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+      if (!have || !sameBytes(have, want)) { await sub.unsubscribe(); sub = null; }   // keys changed
+    }
+    if (!sub) {
+      try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want }); }
+      catch (e) { say("Couldn’t turn on notifications: " + e.message); return false; }
+    }
+    await registerOnServer(sub);
+    return true;
+  }
+
+  async function disableHere() {
+    var reg = await navigator.serviceWorker.getRegistration();
+    var sub = reg ? await reg.pushManager.getSubscription() : null;
+    if (!sub) return;
+    var endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    say("Turned off on this device.");
+    if (!(await ensureKey())) { say("Turned off here. It will disappear from the list the next time GitHub can’t reach it."); return; }
+    var t0 = Date.now();
+    if (await dispatchWorkflow("push.yml", { action: "unsubscribe", endpoint: endpoint })) {
+      await waitForRun("push.yml", t0);
+      say("Turned off ✓");
+    }
+  }
+
+  $("nSwitch").addEventListener("change", async function () {
+    var sw = this; sw.disabled = true;
+    try {
+      if (sw.checked) { if (!(await enableHere())) sw.checked = false; }
+      else await disableHere();
+    } finally { sw.disabled = false; await refreshNotif(); }
+  });
+
+  ["pOfficial", "pReleased", "pRumor"].forEach(function (id) { $(id).addEventListener("change", updateSave); });
+
+  $("nSave").addEventListener("click", async function () {
+    var btn = this; btn.disabled = true;
+    try {
+      var reg = await navigator.serviceWorker.getRegistration();
+      var sub = reg ? await reg.pushManager.getSubscription() : null;
+      if (!sub) { say("Turn notifications on first."); return; }
+      await registerOnServer(sub);
+    } finally { await refreshNotif(); }
+  });
+
+  $("nTest").addEventListener("click", async function () {
+    var btn = this;
+    var reg = await navigator.serviceWorker.getRegistration();
+    var sub = reg ? await reg.pushManager.getSubscription() : null;
+    if (!sub) { say("Turn notifications on first."); return; }
+    if (!(await ensureKey())) return;
+    btn.disabled = true;
+    try {
+      var t0 = Date.now();
+      if (!(await dispatchWorkflow("push.yml", { action: "test", endpoint: sub.endpoint, delay: "15" }))) return;
+      say("Test started. Close the app or browser now. A notification should arrive in about a minute.", true);
+      var run = await waitForRun("push.yml", t0);
+      if (!run) say("Still no answer from GitHub. If no notification arrives, tell me.");
+      else if (run.conclusion !== "success") say("The test failed. Open the Actions tab on GitHub (“Push notifications”) to see why.");
+      else say("The test was sent ✓ If nothing showed up, tell me.");
+    } finally { btn.disabled = false; }
+  });
+
+  $("nLocal").addEventListener("click", async function () {
+    try {
+      var perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission();
+      if (perm !== "granted") { say("Your browser is blocking notifications for this site."); return; }
+      var reg = await getReg();
+      await reg.showNotification("GTA 6 PC checker", {
+        body: "Local test: your browser allows notifications ✓", icon: "icon-192.png", tag: "gta6pc-local"
+      });
+      say("Sent. Look for it in your notifications.");
+    } catch (e) { say("Couldn’t show it: " + e.message); }
+  });
+
+  /* ================= start ================= */
+
   document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+  route();
   load();
+  showForget();
 })();
 </script>
 </body>

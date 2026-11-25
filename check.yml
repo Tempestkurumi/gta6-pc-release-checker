@@ -1,0 +1,48 @@
+name: Check GTA 6 PC release
+
+on:
+  schedule:
+    - cron: "17 6 * * *"     # every day at 06:17 UTC
+  workflow_dispatch:          # lets you (or the website's button) start it by hand
+
+permissions:
+  contents: write             # so the script can save result.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the checker
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # optional, not needed for website notifications
+        run: python3 check.py
+
+      # Only when the answer changed: check.py leaves a notify.json behind
+      - uses: actions/setup-python@v5
+        if: hashFiles('notify.json') != ''
+        with:
+          python-version: "3.12"
+
+      - name: Install the web push library
+        if: hashFiles('notify.json') != ''
+        run: pip install --disable-pip-version-check pywebpush
+
+      - name: Send push notifications
+        if: hashFiles('notify.json') != ''
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          REPO: ${{ github.repository }}
+        run: python3 push.py notify
+
+      - name: Save result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add result.json
+          git add subscriptions.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Update result"
+            for i in 1 2 3; do git push && break || git pull --rebase; done
+          fi

@@ -607,6 +607,24 @@ def notify(headline, detail):
         log("notification failed:", e)
 
 
+def notify_category(res):
+    """Which kind of news is this? Devices choose which kinds they want."""
+    if res["status"] == "released":
+        return "released"
+    if res["confidence"] == "official" and res["status"] in ("date_official", "pc_confirmed"):
+        return "official"
+    return "rumor"      # rumors, and "back to nothing"
+
+
+def write_notify_file(res, out_path):
+    """Leaves notify.json next to result.json. The workflow's push step sends it."""
+    path = os.path.join(os.path.dirname(os.path.abspath(out_path)), "notify.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"title": "GTA 6 PC release update",
+                   "body": f"{res['headline']}. {res['detail']}",
+                   "category": notify_category(res)}, fh, ensure_ascii=False)
+
+
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
@@ -620,6 +638,9 @@ def main():
     args = ap.parse_args()
 
     today = date.fromisoformat(args.today) if args.today else datetime.now(timezone.utc).date()
+    stale = os.path.join(os.path.dirname(os.path.abspath(args.out)), "notify.json")
+    if os.path.exists(stale):
+        os.remove(stale)        # never re-send an old notification
     items, feeds_ok, steam_note = [], 0, "not checked"
     steam_info = None
 
@@ -686,6 +707,7 @@ def main():
         res["changed_at"] = old.get("changed_at", now)
     elif old is not None and old.get("status") != "unchecked" and not args.sample:
         notify(res["headline"], res["detail"])
+        write_notify_file(res, args.out)
 
     with open(args.out, "w", encoding="utf-8") as fh:
         json.dump(res, fh, indent=2, ensure_ascii=False)

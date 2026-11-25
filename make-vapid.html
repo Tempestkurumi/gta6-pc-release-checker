@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Make notification keys</title>
+<style>
+  :root { --bg:#f3f5f4; --fg:#14201a; --muted:#5d6b63; --line:#c9d1cd; --card:#fff; --ok:#1f9d55; --bad:#d64545; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1a14; --fg:#e8f1ec; --muted:#93a39a; --line:#2c4336; --card:#15241c; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:20px 16px; }
+  main { max-width: 540px; margin: 0 auto; display: grid; gap: 14px; }
+  h1 { font-size: 22px; margin: 0; }
+  p, li { color: var(--muted); font-size: 14px; margin: 0; }
+  ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  label { display:block; font-weight:600; font-size:14px; margin-bottom:4px; }
+  input { width:100%; font:ui-monospace,Menlo,monospace; font-size:13px; padding:10px 12px; color:var(--fg); background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  button { font:inherit; font-weight:600; padding:10px 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  .row { display:flex; gap:8px; } .row input { flex:1; }
+  #msg { font-weight:600; min-height: 1.4em; } .ok { color: var(--ok); } .bad { color: var(--bad); }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; gap:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Make notification keys</h1>
+  <p>This makes the two keys that let your checker send notifications to your devices. It happens inside your browser, nothing is sent anywhere. <b>Do this only once.</b> Making new keys later makes the old ones stop working.</p>
+  <button id="make" type="button">Make my keys</button>
+  <div id="msg" role="status"></div>
+
+  <div id="out" class="box" hidden>
+    <div>
+      <label for="priv">1. Private key (secret, don&rsquo;t share it)</label>
+      <div class="row"><input id="priv" readonly><button id="copy" type="button">Copy</button></div>
+      <p style="margin-top:6px">On GitHub: your repo &rarr; <b>Settings</b> &rarr; <b>Secrets and variables</b> &rarr; <b>Actions</b> &rarr; <b>New repository secret</b>. Name: <b>VAPID_PRIVATE_KEY</b>. Secret: paste this key. Save.</p>
+    </div>
+    <div>
+      <label for="pub">2. Public key (fine to share)</label>
+      <input id="pub" readonly>
+      <p style="margin-top:6px">It is also saved in the file <b>vapid.json</b> that just downloaded. Upload that file to your repo (Add file &rarr; Upload files).</p>
+    </div>
+    <p>When both are done, open your page &rarr; menu &rarr; Notification settings.</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function b64u(bytes) {
+    var s = ""; for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function say(t, cls) { $("msg").textContent = t; $("msg").className = cls || ""; }
+
+  $("make").addEventListener("click", async function () {
+    if (!(window.crypto && crypto.subtle)) { say("Open this page from its https link so encryption is available.", "bad"); return; }
+    if ($("out").hidden === false && !confirm("You already made keys on this page. Making new ones breaks the old ones. Continue?")) return;
+    try {
+      var kp = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+      var pub = new Uint8Array(await crypto.subtle.exportKey("raw", kp.publicKey));      // 65 bytes
+      var jwk = await crypto.subtle.exportKey("jwk", kp.privateKey);                       // jwk.d = 32 bytes
+      var pubB64 = b64u(pub);
+      if (pub.length !== 65 || !jwk.d) throw new Error("unexpected key format");
+      $("priv").value = jwk.d; $("pub").value = pubB64; $("out").hidden = false;
+
+      var json = JSON.stringify({ publicKey: pubB64 }, null, 2) + "\n";
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+      a.download = "vapid.json"; document.body.appendChild(a); a.click(); a.remove();
+      say("Done ✓ Follow steps 1 and 2 below.", "ok");
+    } catch (e) { say("Something went wrong: " + e.message, "bad"); }
+  });
+
+  $("copy").addEventListener("click", async function () {
+    try { await navigator.clipboard.writeText($("priv").value); this.textContent = "Copied ✓"; }
+    catch (e) { $("priv").select(); this.textContent = "Select + copy"; }
+    var b = this; setTimeout(function () { b.textContent = "Copy"; }, 2000);
+  });
+})();
+</script>
+</body>
+</html>
