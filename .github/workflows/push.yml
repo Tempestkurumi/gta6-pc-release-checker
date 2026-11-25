@@ -39,6 +39,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The device list lives on the "data" branch, so saving it never redeploys the website.
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -48,6 +54,7 @@ jobs:
 
       - name: Run
         env:
+          SUBS_FILE: data/subscriptions.json
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           REPO: ${{ github.repository }}
           ACTION: ${{ inputs.action }}
@@ -56,10 +63,14 @@ jobs:
           LABEL: ${{ inputs.label }}
           ENDPOINT: ${{ inputs.endpoint }}
           DELAY: ${{ inputs.delay }}
-        run: python3 push.py "$ACTION"
+        run: |
+          # first run only: carry over a device list that used to live on the main branch
+          if [ ! -f data/subscriptions.json ] && [ -f subscriptions.json ]; then cp subscriptions.json data/subscriptions.json; fi
+          python3 push.py "$ACTION"
 
       - name: Save the device list
         if: always()
+        working-directory: data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
