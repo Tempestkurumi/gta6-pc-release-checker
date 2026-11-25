@@ -26,5 +26,19 @@
     },
     "label": "Android · Chrome (app)",
     "added": "2026-11-25T11:51:01+00:00"
+  },
+  {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/e83DLPOx2Ug:APA91bEZhHZbzcs0TscukMXRgub-mI3zUnJcVQeGJmqAmCs5-0QW-WVnJ8_-RqTTNObY3wJ8BMVRWRnfcmAzMqdxXecbVTShEOb1zPEn62XSmBiuw0jraloqoAuYRgnmZWv5Mj08XaZE",
+    "keys": {
+      "p256dh": "BGLOkSjMvgmg-m3NvKEWPdmAePzCFoNaQw3fhvZ22ErlGL91u3m0Kuww4h2iBdG0_BLIPrrzUox6BJuC2UKMSmg",
+      "auth": "DV-lhglbZFdCKK5bfDv2BA"
+    },
+    "prefs": {
+      "official": true,
+      "released": true,
+      "rumor": false
+    },
+    "label": "Android · Chrome (app)",
+    "added": "2026-11-25T12:16:10+00:00"
   }
 ]
