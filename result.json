@@ -8,10 +8,10 @@
   "confidence": "rumored",
   "sources": [
     {
-      "title": "GTA 6 PC Rumors: What's Real and What's Just Hype",
-      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTFB5elYwVXFYT1ZYSmpoSThtZDFSZ09wMVhMWkVvY3RJVTFTU3RhWldIMXlMRWdYM1k4NzhTaFNCMHN1d3hRSEl1VGZEaWpUS3A3cTJrNnRlYXB6MkY2WmZRMEduTWNvY29PZ2NFeVhJVVlNWFkyZnRKbw?oc=5",
-      "source": "pcmag.com",
-      "published": "2026-11-23",
+      "title": "Unauthorized 'GTA 6' PC port shut down by Rockstar Games' parent company",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE12VTc3ZHQtR2xucW9IU0RZNmRsYVVMWUViamJ5Xzh4R3FJc1ZHc1V1STRLeDk1aEJfQ25TbTk1bTk5OVRpU21xSF9hNjNjQTdJNEd5d1pYXy1NU2s5TlhWLTEyOENSa0hPRHBMcVpZOWViY3dRejhjSQ?oc=5",
+      "source": "mashable.com",
+      "published": "2026-11-25",
       "rumor": false
     },
     {
@@ -22,11 +22,11 @@
       "rumor": false
     }
   ],
-  "checked_at": "2026-11-25T12:14:22+00:00",
+  "checked_at": "2026-11-25T12:22:10+00:00",
   "changed_at": "2026-11-25T11:53:10+00:00",
   "steam": "no page",
   "articles_scanned": 1290,
-  "articles_about_gta6": 575,
+  "articles_about_gta6": 587,
   "feeds_ok": 15,
   "feeds_total": 15
 }
