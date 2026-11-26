@@ -1,32 +1,32 @@
 {
   "status": "date_rumored",
-  "headline": "PC release: Q1 2027 (rumored)",
+  "headline": "PC release: March 2027 (rumored)",
   "detail": "Rumored only. Not confirmed by Rockstar or several trusted sites.",
   "date": null,
-  "date_text": "Q1 2027",
-  "date_kind": "quarter",
+  "date_text": "March 2027",
+  "date_kind": "month",
   "confidence": "rumored",
   "sources": [
     {
-      "title": "GTA 6's PC Release Is Reportedly Q1 2027 - IGN Daily FIx",
-      "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPZG9Zejd5b0FvS1d1dGEzcjhPc1FYeGRaVndSbjRNcDdwUGlDOWprT1JDZzZ4SHJfcGgwVXJxV2Y0bk5mMnBwQ1FDRkk2RkpBTlhmbFoydjdCbkV0aWxVNTdUNFkyckF3bzJnb3FRU1JnVHBsVk5mSkFWakRKZ01hUjR0N1BISTEwYXg3NWFoYWlUUkoyODhlQk56TmxZQkJORk9NaWN3?oc=5",
-      "source": "nordic.ign.com",
-      "published": "2026-10-13",
-      "rumor": true
+      "title": "Unauthorized 'GTA 6' PC port shut down by Rockstar Games' parent company",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE12VTc3ZHQtR2xucW9IU0RZNmRsYVVMWUViamJ5Xzh4R3FJc1ZHc1V1STRLeDk1aEJfQ25TbTk1bTk5OVRpU21xSF9hNjNjQTdJNEd5d1pYXy1NU2s5TlhWLTEyOENSa0hPRHBMcVpZOWViY3dRejhjSQ?oc=5",
+      "source": "mashable.com",
+      "published": "2026-11-26",
+      "rumor": false
     },
     {
-      "title": "GTA 6 Reportedly Set for PC Q1 2027",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPUXBYdWVDaEVzUWZCUE16TlNVRVBieW1EWlZ3UDNpNkMyLWRfYXh0T2ZuVlpOUFplUWZvckRiZUp3cG5Na3BDeVduSW5RQmNiZUZlX1VIRWlsQVJuTlpSbV9RdHpSMTdlZ3FTUks4MHRVdG9TWHIzZlVPRmZtWkVEUnBuN24taXc1VWVPZUxmVG53dU14VzN3ZFlNVQ?oc=5",
-      "source": "pk.ign.com",
+      "title": "Report: GTA VI PC port coming Jan - Mar 2027",
+      "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPdG4wMlpmcFpKYk0zSGd3R1RaRC02WExsQmQ5TlQ3dnNuTkxiTzVWWm43WWMwR2stYlZGNXdQUmJVTUFjcXNSSmZLUV9ZMXZHMmI2RkUzbzlJV3FIMmpfUmUyekFwam5QMDY3SWZuQTNSclBiY2dGRlRoQklOaUoyQzN0MXcySjhvVk51ODVrNW1DdHpv?oc=5",
+      "source": "tweaktown.com",
       "published": "2026-10-13",
-      "rumor": true
+      "rumor": false
     }
   ],
-  "checked_at": "2026-11-25T14:57:59+00:00",
-  "changed_at": "2026-11-25T14:57:59+00:00",
+  "checked_at": "2026-11-26T17:00:09+00:00",
+  "changed_at": "2026-11-26T17:00:09+00:00",
   "steam": "no page",
-  "articles_scanned": 1264,
-  "articles_about_gta6": 562,
+  "articles_scanned": 1295,
+  "articles_about_gta6": 537,
   "feeds_ok": 15,
   "feeds_total": 15
 }
