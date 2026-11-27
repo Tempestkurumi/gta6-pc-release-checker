@@ -1,32 +1,39 @@
 {
   "status": "date_rumored",
-  "headline": "PC release: March 2027 (rumored)",
+  "headline": "PC release: Early 2027 (rumored)",
   "detail": "Rumored only. Not confirmed by Rockstar or several trusted sites.",
   "date": null,
-  "date_text": "March 2027",
-  "date_kind": "month",
+  "date_text": "Early 2027",
+  "date_kind": "season",
   "confidence": "rumored",
   "sources": [
     {
-      "title": "Unauthorized 'GTA 6' PC port shut down by Rockstar Games' parent company",
-      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE12VTc3ZHQtR2xucW9IU0RZNmRsYVVMWUViamJ5Xzh4R3FJc1ZHc1V1STRLeDk1aEJfQ25TbTk1bTk5OVRpU21xSF9hNjNjQTdJNEd5d1pYXy1NU2s5TlhWLTEyOENSa0hPRHBMcVpZOWViY3dRejhjSQ?oc=5",
-      "source": "mashable.com",
-      "published": "2026-11-26",
-      "rumor": false
+      "title": "GTA VI PC version reportedly targeting early 2027 launch",
+      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBQU3N5aXd0RVFaWlNDWFgyckZXcHVqMFVEaWpISUh6VDloT3JfcXhyOHhjTUp2cm9RemU4VG5UbnlQTkhDOHM5Z0x2WHNWYXBtd3JMb1UwVjg5Y0llaW9odnRJOUpic2s?oc=5",
+      "source": "bandwidthblog.co.za",
+      "published": "2026-10-16",
+      "rumor": true
     },
     {
-      "title": "Report: GTA VI PC port coming Jan - Mar 2027",
-      "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPdG4wMlpmcFpKYk0zSGd3R1RaRC02WExsQmQ5TlQ3dnNuTkxiTzVWWm43WWMwR2stYlZGNXdQUmJVTUFjcXNSSmZLUV9ZMXZHMmI2RkUzbzlJV3FIMmpfUmUyekFwam5QMDY3SWZuQTNSclBiY2dGRlRoQklOaUoyQzN0MXcySjhvVk51ODVrNW1DdHpv?oc=5",
-      "source": "tweaktown.com",
+      "title": "‘Grand Theft Auto VI’ Reportedly Set for Early 2027 Release on PC",
+      "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxOWjRPNlNhbTlKYUhna25HZEJXd3JGUmN3UEgwaGJBdUhkdUgwME5fY0pUSFQ3WVoweUd0Wk9lNURrWlhNa1JHXzhPMnNhWlg1b21BaWxhRVk0SnVWQWxUWmtwSThNMWhiV004eXY1S0txRFAwc3NxSEhGNi02OVNXOEpHeVR6VjFwalpZ?oc=5",
+      "source": "complex.com",
       "published": "2026-10-13",
-      "rumor": false
+      "rumor": true
+    },
+    {
+      "title": "‘Grand Theft Auto VI’ PC Release Reportedly Set for Early 2027",
+      "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNTF9mZzdldkJoYkRicHdjbG42c1djSlc1OGpTNjBjV1Nnc0ljb2pYTGw1dk1fVXFOZ0JIZUJyckRKbnM1U1ROMmx3M0NycHBMTFQ5YlVEVUdGVktqZER5VEY3cEwyTDBFQ2NTQjNPUDBNWHNfRGhxb1A5WEhUeDQyX1ln?oc=5",
+      "source": "tech.yahoo.com",
+      "published": "2026-10-18",
+      "rumor": true
     }
   ],
-  "checked_at": "2026-11-26T17:00:09+00:00",
-  "changed_at": "2026-11-26T17:00:09+00:00",
+  "checked_at": "2026-11-27T16:46:44+00:00",
+  "changed_at": "2026-11-27T16:46:44+00:00",
   "steam": "no page",
-  "articles_scanned": 1295,
-  "articles_about_gta6": 537,
+  "articles_scanned": 1270,
+  "articles_about_gta6": 550,
   "feeds_ok": 15,
   "feeds_total": 15
 }
